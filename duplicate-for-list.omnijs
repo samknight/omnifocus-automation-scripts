@@ -1,0 +1,86 @@
+/*{
+	"type": "action",
+	"targets": ["omnifocus"],
+	"author": "Sam Knight",
+	"identifier": "uk.co.samknight.duplicate-for-list",
+	"version": "1.0",
+	"description": "Duplicate selected tasks and replace a placeholder with values from a list.",
+	"label": "Duplicate for list",
+	"shortLabel": "DuplicateForList"
+}*/
+
+(() => {
+	// Initial config
+	let preferences = new Preferences()
+	var action = new PlugIn.Action(function(selection, sender){
+
+		let selectedTasks = selection.tasks
+
+		deleteOriginal = function(tasks) {
+			tasks.reverse().forEach(function(task){
+				deleteObject(task)
+			})
+		}
+
+		renameSelfAndChildren = function(task, pattern, new_string){
+			task.name = task.name.replace(pattern, new_string)
+
+			task.children.forEach(function(child){
+				renameSelfAndChildren(child, pattern, new_string)
+			});
+		};
+
+		duplicateAndRename = function(task, value){
+			var duplicated_tasks = duplicateTasks([task], insertionLocation)
+			renameSelfAndChildren(task, /\{config\.reports\}/g, value)
+		}
+
+
+		runAction = function(tasks) {
+			// selection options: tasks, projects, folders, tags
+			var duplicatedTasks = new Array()
+			var values = preferences.readString('values').split(',')
+			// Duplicate number of times required
+			selectedTasks.forEach(function(task, index){
+				var insertionLocation = task.parent //could be task or project?
+				if(insertionLocation === null){ insertionLocation = inbox.ending }
+				if(task.parent == insertionLocation) {
+					values.forEach(function(value){
+						var duplicated_tasks = duplicateTasks([task], insertionLocation)
+						renameSelfAndChildren(duplicated_tasks[0], /\{var\}/g, value)
+					})
+				}
+			});
+
+			// Delete original templates in reverse order to stop dependency errors
+			deleteOriginal(selectedTasks)
+		}
+
+		if (!preferences.readString('values') || app.optionKeyDown || app.controlKeyDown || app.commandKeyDown) {
+			var inputForm = new Form()
+			var listField = new Form.Field.String(
+			"valueList",
+			"Values",
+			"value 1, value 2"
+			)
+			inputForm.addField(listField)
+
+			var formPromise = inputForm.show("Enter your replacement values with a comma separated list:","Save")
+			formPromise.then(function(formObject){
+				preferences.write("values", formObject.values['valueList'])
+				runAction()
+			});
+		}
+		else {
+			runAction()
+		}
+	});
+
+	action.validate = function(selection, sender){
+		// validation code
+		// selection options: tasks, projects, folders, tags
+		return (selection.tasks.length > 0)
+	};
+
+	return action;
+})();
