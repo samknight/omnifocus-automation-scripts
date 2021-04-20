@@ -3,7 +3,7 @@
 	"targets": ["omnifocus"],
 	"author": "Sam Knight",
 	"identifier": "uk.co.samknight.duplicate-for-list",
-	"version": "1.1",
+	"version": "1.2",
 	"description": "Duplicate selected tasks and replace a placeholder with values from a list.",
 	"label": "Duplicate for list",
 	"shortLabel": "DuplicateForList"
@@ -24,6 +24,7 @@
 
 		renameSelfAndChildren = function(task, pattern, new_string){
 			task.name = task.name.replace(pattern, new_string)
+      addTagValue(task, new_string)
 
 			task.children.forEach(function(child){
 				renameSelfAndChildren(child, pattern, new_string)
@@ -34,6 +35,13 @@
 			var duplicated_tasks = duplicateTasks([task], insertionLocation)
 			renameSelfAndChildren(task, /\{config\.reports\}/g, value)
 		}
+    
+    addTagValue = function(task, value) {
+      if (preferences.readString('applyTag') == '1') {
+        tag = tagNamed(value) || new Tag(value)
+        task.addTag(tag) 
+      }
+    }
 
 
 		runAction = function(tasks) {
@@ -60,21 +68,37 @@
 			var inputForm = new Form()
 
       // Prefill with existing values if possible
-      var defaultValues = "value 1, value 2"
+      var defaultListValue = "value 1, value 2"
       if (preferences.readString('values') !== null) {
-        defaultValues = preferences.readString('values')
+        defaultListValue = preferences.readString('values')
       }
-      
+
+      // Form element to create list
 			var listField = new Form.Field.String(
 			"valueList",
 			"Values",
-			defaultValues
+			defaultListValue
 			)
 			inputForm.addField(listField)
+      
+      // Prefill with existing values if possible
+      var defaultTagValue = false
+      if (preferences.readString('applyTag') == '1') {
+        defaultTagValue = true
+      }
+      
+      // Form element to add tag option
+      tagOptionField = new Form.Field.Checkbox(
+      "tagCheckbox",
+      "Add a tag with the same value?",
+      defaultTagValue)
+      inputForm.addField(tagOptionField)
 
 			var formPromise = inputForm.show("Enter your replacement values with a comma separated list:","Save")
+
 			formPromise.then(function(formObject){
 				preferences.write("values", formObject.values['valueList'])
+        preferences.write("applyTag", formObject.values['tagCheckbox'])
 				runAction()
 			});
 		}
