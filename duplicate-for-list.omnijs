@@ -3,7 +3,7 @@
 	"targets": ["omnifocus"],
 	"author": "Sam Knight",
 	"identifier": "uk.co.samknight.duplicate-for-list",
-	"version": "1.0",
+	"version": "1.1",
 	"description": "Duplicate selected tasks and replace a placeholder with values from a list.",
 	"label": "Duplicate for list",
 	"shortLabel": "DuplicateForList"
@@ -58,10 +58,17 @@
 
 		if (!preferences.readString('values') || app.optionKeyDown || app.controlKeyDown || app.commandKeyDown) {
 			var inputForm = new Form()
+
+      // Prefill with existing values if possible
+      var defaultValues = "value 1, value 2"
+      if (preferences.readString('values') !== null) {
+        defaultValues = preferences.readString('values')
+      }
+      
 			var listField = new Form.Field.String(
 			"valueList",
 			"Values",
-			"value 1, value 2"
+			defaultValues
 			)
 			inputForm.addField(listField)
 
