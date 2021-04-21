@@ -3,7 +3,7 @@
 	"targets": ["omnifocus"],
 	"author": "Sam Knight",
 	"identifier": "uk.co.samknight.duplicate-for-list",
-	"version": "1.2",
+	"version": "1.3",
 	"description": "Duplicate selected tasks and replace a placeholder with values from a list.",
 	"label": "Duplicate for list",
 	"shortLabel": "DuplicateForList"
