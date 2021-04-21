@@ -64,7 +64,7 @@
 			deleteOriginal(selectedTasks)
 		}
 
-		if (!preferences.readString('values') || app.optionKeyDown || app.controlKeyDown || app.commandKeyDown) {
+		if (!preferences.readString('values') || !preferences.readString('applyTag') || app.optionKeyDown || app.controlKeyDown || app.commandKeyDown) {
 			var inputForm = new Form()
 
       // Prefill with existing values if possible
